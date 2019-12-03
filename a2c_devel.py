@@ -4,6 +4,7 @@ gym.logger.set_level(40)
 import argparse, pickle
 
 import numpy as np
+import time
 
 import torch
 import torch.nn.functional as F
@@ -141,6 +142,7 @@ def save_config(config, base_dir):
     config.device = tmp_device
 
 def train(config):
+    max_dists = []
     base_dir = os.path.join('./results/', args.algo, model_architecture, config.env_id)
     try:
         os.makedirs(base_dir)
@@ -292,7 +294,7 @@ def train(config):
                        np.min(final_rewards),
                        np.max(final_rewards), dist_entropy,
                        value_loss, action_loss, dynamics_loss))
-            
+            max_dists.append(np.mean(max_dist))
             if timer() - last_log > args.tb_dump:
                 last_log = timer()
                 tb_plot_from_monitor(writer, log_dir, np.mean(config.adaptive_repeat), last_reward_logged, 'reward')
@@ -304,6 +306,15 @@ def train(config):
     model.save_w()
     envs.close()
 
+    with open('curiousity2.p', 'wb') as f:
+        pickle.dump(max_dists, f)
+
+    lin = np.linspace(0, 5000000, 16666)
+    plt.plot(lin, max_dists)
+    plt.xlabel('Iterations')
+    plt.ylabel('Progress')
+    plt.savefig('curiousity_only_a2c.png')
+    
 def test(config):
     base_dir = os.path.join('./results/', args.algo, model_architecture, config.env_id)
     log_dir = os.path.join(base_dir, 'logs/')
@@ -377,7 +388,12 @@ def test(config):
             
     
 if __name__=='__main__':
+    toc = time.time()
     if not args.inference:
         train(config)
     else:
         test(config)
+    tic = time.time()
+    print('seconds: ', tic - toc)
+    print('minutes: ', (tic - toc) / 60.0)
+    print('hours: ', (tic - toc) / 3600.0)

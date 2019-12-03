@@ -9,7 +9,8 @@ Requirements:
 * Python 3.6
 * Numpy 
 * Gym 
-* Pytorch >=0.4.0 
+* Pytorch >=0.4.0
+* IPython
 * Matplotlib 
 * OpenCV 
 * Baslines
